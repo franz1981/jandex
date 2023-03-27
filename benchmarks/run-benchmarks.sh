@@ -55,7 +55,7 @@ for VERSION in $VERSIONS ; do
   popd
   rm -r $TEMP
 
-  mvn jmh:benchmark -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+  mvn jmh:benchmark -Djmh.prof="async:output=flamegraph;libPath=/home/forked_franz/ap/async-profiler-2.9-linux-x64/build/libasyncProfiler.so;dir=/tmp/$VERSION" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
 done
 
 # this requires current Jandex workspace to be built and installed to local Maven repo (`mvn clean install -DskipTests`)
