@@ -127,23 +127,44 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         if (o1 == o2) {
             return true;
         }
+        if (o1 != null) {
+            final Class o1Clazz = o1.getClass();
+            if (o1Clazz == String.class) {
+                return o1.equals(o2);
+            }
+            if (o1Clazz == MethodInternal.class) {
+                return ((MethodInternal) o1).internEquals(o2);
+            }
+            if (o1Clazz == FieldInternal.class) {
+                return ((FieldInternal) o1).internEquals(o2);
+            }
+            if (o1Clazz == RecordComponentInternal.class) {
+                return ((RecordComponentInternal) o1).internEquals(o2);
+            }
+            if (o1Clazz == byte[].class && o2 instanceof byte[]) {
+                return Arrays.equals((byte[]) o1, (byte[]) o2);
+            }
+            // avoid array type check with generics eg Interned[]
+            if (o1Clazz == Type[].class && (o2 != null) && (o2 != null && o2.getClass() == Type[].class)) {
+                return Interned.arrayEquals((Type[]) o1, (Type[]) o2);
+            }
+            // try peel off Type checks to save expensive instanceof checks
+            if (o1 instanceof Type) {
+                return ((Type) o1).internEquals(o2);
+            }
+            // slow path
+            if (o1 instanceof Interned[] && o2 instanceof Interned[]) {
+                return Interned.arrayEquals((Type[]) o1, (Type[]) o2);
+            }
 
-        if (o1 instanceof Interned[] && o2 instanceof Interned[]) {
-            return Interned.arrayEquals((Type[]) o1, (Type[]) o2);
+            if (o1 instanceof Interned && o2 instanceof Interned) {
+                return ((Interned) o1).internEquals(o2);
+            }
+
+            if (o1 instanceof Object[] && o2 instanceof Object[]) {
+                return Arrays.equals((Object[]) o1, (Object[]) o2);
+            }
         }
-
-        if (o1 instanceof Interned && o2 instanceof Interned) {
-            return ((Interned) o1).internEquals(o2);
-        }
-
-        if (o1 instanceof Object[] && o2 instanceof Object[]) {
-            return Arrays.equals((Object[]) o1, (Object[]) o2);
-        }
-
-        if (o1 instanceof byte[] && o2 instanceof byte[]) {
-            return Arrays.equals((byte[]) o1, (byte[]) o2);
-        }
-
         return o1 != null && o1.equals(o2);
     }
 
