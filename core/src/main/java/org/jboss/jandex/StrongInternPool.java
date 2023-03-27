@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * A strong intern pool. The pool acts as a set where the first stored entry can be retrieved.
@@ -178,15 +179,29 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     // The normal bit spreader...
     private static int hash(Object o) {
-        int h;
-        if (o instanceof Interned[]) {
-            return Interned.arrayHashCode((Interned[]) o);
+        Objects.requireNonNull(o);
+        final int h;
+        final Class o1Clazz = o.getClass();
+        if (o1Clazz == String.class) {
+            h = o.hashCode();
+        } else if (o1Clazz == MethodInternal.class) {
+            h = ((MethodInternal) o).internHashCode();
+        } else if (o1Clazz == FieldInternal.class) {
+            h = ((FieldInternal) o).internHashCode();
+        } else if (o1Clazz == RecordComponentInternal.class) {
+            h = ((RecordComponentInternal) o).internHashCode();
+        } else if (o1Clazz == byte[].class) {
+            h = Arrays.hashCode((byte[]) o);
+        } else if (o1Clazz == Type[].class) {
+            h = Interned.arrayHashCode((Type[]) o);
+        } else if (o instanceof Type) {
+            h = ((Type) o).internHashCode();
+        } else if (o instanceof Interned[]) {
+            h = Interned.arrayHashCode((Interned[]) o);
         } else if (o instanceof Interned) {
-            return ((Interned) o).internHashCode();
+            h = ((Interned) o).internHashCode();
         } else if (o instanceof Object[]) {
             h = Arrays.hashCode((Object[]) o);
-        } else if (o instanceof byte[]) {
-            h = Arrays.hashCode((byte[]) o);
         } else {
             h = o.hashCode();
         }
