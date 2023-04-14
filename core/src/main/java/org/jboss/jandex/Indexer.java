@@ -316,6 +316,8 @@ public final class Indexer {
         }
     }
 
+    private static final boolean DISABLE_TMP_POOL = Boolean.getBoolean("jandex.disable.pooling");
+
     private static final class TmpObjects {
         private Utils.ReusableBufferedDataInputStream dataInputStream;
 
@@ -324,6 +326,11 @@ public final class Indexer {
         private byte[] constantPoolAnnoAttributes;
 
         DataInputStream dataInputStreamOf(InputStream inputStream) {
+            if (DISABLE_TMP_POOL) {
+                Utils.ReusableBufferedDataInputStream stream = new Utils.ReusableBufferedDataInputStream();
+                stream.setInputStream(inputStream);
+                return stream;
+            }
             Utils.ReusableBufferedDataInputStream stream = dataInputStream;
             if (stream == null) {
                 stream = new Utils.ReusableBufferedDataInputStream();
@@ -334,6 +341,9 @@ public final class Indexer {
         }
 
         byte[] borrowConstantPool(int poolSize) {
+            if (DISABLE_TMP_POOL) {
+                return new byte[20 * poolSize]; // Guess
+            }
             byte[] buf = this.constantPool;
             if (buf == null || buf.length < (20 * poolSize)) {
                 buf = new byte[20 * poolSize]; // Guess
@@ -345,10 +355,16 @@ public final class Indexer {
         }
 
         void returnConstantPool(byte[] buf) {
+            if (DISABLE_TMP_POOL) {
+                return;
+            }
             this.constantPool = buf;
         }
 
         int[] borrowConstantPoolOffsets(int poolSize) {
+            if (DISABLE_TMP_POOL) {
+                return new int[poolSize];
+            }
             int[] buf = this.constantPoolOffsets;
             if (buf == null || buf.length < poolSize) {
                 buf = new int[poolSize];
@@ -360,10 +376,16 @@ public final class Indexer {
         }
 
         void returnConstantPoolOffsets(int[] offsets) {
+            if (DISABLE_TMP_POOL) {
+                return;
+            }
             this.constantPoolOffsets = offsets;
         }
 
         byte[] borrowConstantPoolAnnoAttributes(int poolSize) {
+            if (DISABLE_TMP_POOL) {
+                return new byte[poolSize];
+            }
             byte[] buf = this.constantPoolAnnoAttributes;
             if (buf == null || buf.length < poolSize) {
                 buf = new byte[poolSize];
@@ -375,6 +397,9 @@ public final class Indexer {
         }
 
         void returnConstantAnnoAttributes(byte[] attributes) {
+            if (DISABLE_TMP_POOL) {
+                return;
+            }
             this.constantPoolAnnoAttributes = attributes;
         }
     }
